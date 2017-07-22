@@ -23,9 +23,6 @@
 
 #include <taihen.h>
 
-int sceIoPread(SceUID fd, void *data, SceSize size, SceOff offset);
-char *sceClibStrchr(const char *, int);
-
 static tai_hook_ref_t ExportFileRef;
 static tai_hook_ref_t GetFileTypeRef;
 
@@ -51,12 +48,12 @@ static int ExportFilePatched(uint32_t *data) {
 			return fd;
 
 		sceIoPread(fd, &url_length, sizeof(uint16_t), 0xD6);
-		sceIoPread(fd, file_name, sizeof(file_name), 0xF7 + url_length);
+		sceIoPread(fd, file_name, sizeof(file_name)-1, 0xF7 + url_length);
 		sceIoClose(fd);
 
 		sceClibSnprintf(bgdl_path, sizeof(bgdl_path)-1, "ux0:bgdl/t/%08x/%s", num, file_name);
 
-		char *ext = sceClibStrchr(file_name, '.');
+		char *ext = sceClibStrrchr(file_name, '.');
 		if (ext) {
 			int len = ext-file_name;
 			if (len > sizeof(short_name)-1)
@@ -64,7 +61,7 @@ static int ExportFilePatched(uint32_t *data) {
 			sceClibStrncpy(short_name, file_name, len);
 			short_name[len] = '\0';
 		} else {
-			sceClibStrncpy(short_name, file_name, sizeof(short_name));
+			sceClibStrncpy(short_name, file_name, sizeof(short_name)-1);
 			ext = "";
 		}
 
@@ -109,11 +106,23 @@ int module_start(SceSize args, void *argp) {
 	info.size = sizeof(info);
 	if (taiGetModuleInfo("SceShell", &info) >= 0) {
 		switch (info.module_nid) {
-			case 0x0552F692: // retail 3.60 SceShell
+			case 0x0552F692: // Retail 3.60 SceShell
 			{
 				hooks[0] = taiInjectData(info.modid, 0, 0x50A4A8, "GET", 4);
 				hooks[1] = taiHookFunctionOffset(&ExportFileRef, info.modid, 0, 0x1163F6, 1, ExportFilePatched);
 				hooks[2] = taiHookFunctionOffset(&GetFileTypeRef, info.modid, 0, 0x11B5E4, 1, GetFileTypePatched);
+				break;
+			}
+			
+			case 0x6CB01295: // PDEL 3.60 SceShell
+			{
+				// TODO
+				break;
+			}
+			
+			case 0xEAB89D5C: // PTEL 3.60 SceShell
+			{
+				// TODO
 				break;
 			}
 		}
