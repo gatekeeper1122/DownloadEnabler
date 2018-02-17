@@ -1,6 +1,6 @@
 /*
 	Download Enabler
-	Copyright (C) 2017, TheFloW
+	Copyright (C) 2017-2018, TheFloW
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -41,35 +41,35 @@ static int ExportFilePatched(uint32_t *data) {
 
 		uint32_t num = *(uint32_t *)data[0];
 
-		sceClibSnprintf(bgdl_path, sizeof(bgdl_path)-1, "ux0:bgdl/t/%08x/d0.pdb", num);
+		sceClibSnprintf(bgdl_path, sizeof(bgdl_path) - 1, "ux0:bgdl/t/%08x/d0.pdb", num);
 
 		SceUID fd = sceIoOpen(bgdl_path, SCE_O_RDONLY, 0);
 		if (fd < 0)
 			return fd;
 
 		sceIoPread(fd, &url_length, sizeof(uint16_t), 0xD6);
-		sceIoPread(fd, file_name, sizeof(file_name)-1, 0xF7 + url_length);
+		sceIoPread(fd, file_name, sizeof(file_name) - 1, 0xF7 + url_length);
 		sceIoClose(fd);
 
-		sceClibSnprintf(bgdl_path, sizeof(bgdl_path)-1, "ux0:bgdl/t/%08x/%s", num, file_name);
+		sceClibSnprintf(bgdl_path, sizeof(bgdl_path) - 1, "ux0:bgdl/t/%08x/%s", num, file_name);
 
 		char *ext = sceClibStrrchr(file_name, '.');
 		if (ext) {
 			int len = ext-file_name;
-			if (len > sizeof(short_name)-1)
-				len = sizeof(short_name)-1;
+			if (len > sizeof(short_name) - 1)
+				len = sizeof(short_name) - 1;
 			sceClibStrncpy(short_name, file_name, len);
 			short_name[len] = '\0';
 		} else {
-			sceClibStrncpy(short_name, file_name, sizeof(short_name)-1);
+			sceClibStrncpy(short_name, file_name, sizeof(short_name) - 1);
 			ext = "";
 		}
 
 		while (1) {
 			if (count == 0)
-				sceClibSnprintf(download_path, sizeof(download_path)-1, "ux0:download/%s", file_name);
+				sceClibSnprintf(download_path, sizeof(download_path) - 1, "ux0:download/%s", file_name);
 			else
-				sceClibSnprintf(download_path, sizeof(download_path)-1, "ux0:download/%s (%d)%s", short_name, count, ext);
+				sceClibSnprintf(download_path, sizeof(download_path) - 1, "ux0:download/%s (%d)%s", short_name, count, ext);
 
 			SceIoStat stat;
 			sceClibMemset(&stat, 0, sizeof(SceIoStat));
@@ -106,23 +106,19 @@ int module_start(SceSize args, void *argp) {
 	info.size = sizeof(info);
 	if (taiGetModuleInfo("SceShell", &info) >= 0) {
 		switch (info.module_nid) {
-			case 0x0552F692: // Retail 3.60 SceShell
+			case 0x0552F692: // 3.60 retail
 			{
 				hooks[0] = taiInjectData(info.modid, 0, 0x50A4A8, "GET", 4);
 				hooks[1] = taiHookFunctionOffset(&ExportFileRef, info.modid, 0, 0x1163F6, 1, ExportFilePatched);
 				hooks[2] = taiHookFunctionOffset(&GetFileTypeRef, info.modid, 0, 0x11B5E4, 1, GetFileTypePatched);
 				break;
 			}
-			
-			case 0x6CB01295: // PDEL 3.60 SceShell
+      
+			case 0x34B4D82E: // 3.67 retail
 			{
-				// TODO
-				break;
-			}
-			
-			case 0xEAB89D5C: // PTEL 3.60 SceShell
-			{
-				// TODO
+				hooks[0] = taiInjectData(info.modid, 0, 0x50A9E8, "GET", 4);
+				hooks[1] = taiHookFunctionOffset(&ExportFileRef, info.modid, 0, 0x11644E, 1, ExportFilePatched);
+				hooks[2] = taiHookFunctionOffset(&GetFileTypeRef, info.modid, 0, 0x11B63C, 1, GetFileTypePatched);
 				break;
 			}
 		}
