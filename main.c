@@ -113,6 +113,26 @@ int module_start(SceSize args, void *argp) {
 				hooks[2] = taiHookFunctionOffset(&GetFileTypeRef, info.modid, 0, 0x11B5E4, 1, GetFileTypePatched);
 				break;
 			}
+			
+			case 0x6CB01295: // PDEL 3.60 SceShell
+			{
+
+				hooks[0] = taiInjectData(info.modid, 0, 0x4F9A18, "GET", 4);
+				hooks[1] = taiHookFunctionOffset(&ExportFileRef, info.modid, 0, 0x111D5A, 1, ExportFilePatched);
+				hooks[2] = taiHookFunctionOffset(&GetFileTypeRef, info.modid, 0, 0x116F48, 1, GetFileTypePatched);
+
+				break;
+			}
+			
+			case 0xEAB89D5C: // PTEL 3.60 SceShell
+			{
+
+				hooks[0] = taiInjectData(info.modid, 0, 0x4FEBF8, "GET", 4);
+				hooks[1] = taiHookFunctionOffset(&ExportFileRef, info.modid, 0, 0x112756, 1, ExportFilePatched);
+				hooks[2] = taiHookFunctionOffset(&GetFileTypeRef, info.modid, 0, 0x117944, 1, GetFileTypePatched);
+
+				break;
+			}
       
 			case 0x34B4D82E: // 3.67 retail
 			{
